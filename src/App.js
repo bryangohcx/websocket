@@ -30,6 +30,7 @@ function App() {
 
     websocket.onclose = () => {
       setMessages((prev) => [...prev, 'Disconnected from server']);
+      setUsers([]); // Clear users on disconnect
     };
 
     return () => {
@@ -46,6 +47,9 @@ function App() {
   };
 
   const handleBackToLobby = () => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'leave', username }));
+    }
     setCurrentView('lobby');
   };
 

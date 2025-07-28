@@ -50,6 +50,15 @@ wss.on('connection', (ws) => {
           }));
         }
       });
+    } else if (data.type === 'leave') {
+      if (data.username) {
+        users = users.filter((user) => user !== data.username);
+        wss.clients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({ type: 'userList', users }));
+          }
+        });
+      }
     }
   });
 
