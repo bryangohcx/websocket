@@ -1,23 +1,72 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState, useEffect } from 'react';
+import Lobby from './components/Lobby';
+import Table from './components/Table';
+import './index.css';
 
 function App() {
+  const [currentView, setCurrentView] = useState('lobby');
+  const [username, setUsername] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [ws, setWs] = useState(null);
+
+  useEffect(() => {
+    const websocket = new WebSocket('ws://localhost:8080');
+    setWs(websocket);
+
+    websocket.onopen = () => {
+      console.log('WebSocket connected');
+    };
+
+    websocket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'message') {
+        setMessages((prev) => [...prev, `${data.username}: ${data.message}`]);
+      } else if (data.type === 'userList') {
+        setUsers(data.users);
+      }
+    };
+
+    websocket.onclose = () => {
+      setMessages((prev) => [...prev, 'Disconnected from server']);
+    };
+
+    return () => {
+      websocket.close();
+    };
+  }, []);
+
+  const handleJoinTable = (name) => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      setUsername(name);
+      ws.send(JSON.stringify({ type: 'join', username: name }));
+      setCurrentView('table');
+    }
+  };
+
+  const handleBackToLobby = () => {
+    setCurrentView('lobby');
+  };
+
+  const sendMessage = (message) => {
+    if (message.trim() && ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'message', username, message }));
+    }
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      {currentView === 'lobby' ? (
+        <Lobby onJoinTable={handleJoinTable} />
+      ) : (
+        <Table
+          username={username}
+          messages={messages}
+          users={users}
+          onBackToLobby={handleBackToLobby}
+          sendMessage={sendMessage}
+        />
+      )}
     </div>
   );
 }
