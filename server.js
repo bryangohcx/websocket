@@ -1,6 +1,8 @@
 const WebSocket = require('ws');
 const express = require('express');
 const path = require('path');
+const { dealCards } = require('./game');
+
 const app = express();
 
 // Serve static files from the React build directory
@@ -56,9 +58,17 @@ wss.on('connection', (ws) => {
         wss.clients.forEach((client) => {
           if (client.readyState === WebSocket.OPEN) {
             client.send(JSON.stringify({ type: 'userList', users }));
+            client.send(JSON.stringify({ type: 'game', cards: {}, winner: null }));
           }
         });
       }
+    } else if (data.type === 'deal') {
+      const { cards, winner } = dealCards(users);
+      wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({ type: 'game', cards, winner }));
+        }
+      });
     }
   });
 
@@ -68,6 +78,7 @@ wss.on('connection', (ws) => {
       wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify({ type: 'userList', users }));
+          client.send(JSON.stringify({ type: 'game', cards: {}, winner: null }));
         }
       });
     }

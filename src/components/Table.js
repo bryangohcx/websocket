@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-function Table({ username, messages, users, onBackToLobby, sendMessage }) {
+function Table({ username, messages, users, gameState, onBackToLobby, sendMessage, dealCards }) {
   const [message, setMessage] = useState('');
 
   const handleSend = () => {
@@ -34,6 +34,34 @@ function Table({ username, messages, users, onBackToLobby, sendMessage }) {
             ))}
           </ul>
         </div>
+        <div style={{ marginBottom: '20px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: '600' }}>Cards:</h2>
+          <ul style={{ listStyleType: 'disc', paddingLeft: '20px' }}>
+            {Object.entries(gameState.cards).map(([player, card]) => (
+              <li key={player}>{player}: {card}</li>
+            ))}
+          </ul>
+          {gameState.winner && (
+            <p style={{ fontWeight: 'bold', color: '#28a745' }}>
+              Winner: {gameState.winner}
+            </p>
+          )}
+        </div>
+        <button
+          onClick={dealCards}
+          style={{
+            backgroundColor: '#28a745',
+            color: '#fff',
+            padding: '8px 16px',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            marginBottom: '20px',
+            width: '100%',
+          }}
+        >
+          Deal Cards
+        </button>
         <div style={{
           height: '300px',
           overflowY: 'auto',
@@ -54,7 +82,7 @@ function Table({ username, messages, users, onBackToLobby, sendMessage }) {
             style={{
               border: '1px solid #ccc',
               padding: '8px',
-              flexGrow: 1,
+              flexGrow: '1',
               borderRadius: '4px 0 0 4px',
               boxSizing: 'border-box',
             }}
