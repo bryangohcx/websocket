@@ -1,10 +1,26 @@
 const WebSocket = require('ws');
-const wss = new WebSocket.Server({ port: 8080 });
+const express = require('express');
+const path = require('path');
+const app = express();
 
+// Serve static files from the React build directory
+app.use(express.static(path.join(__dirname, 'build')));
+
+// Handle all routes by serving index.html for client-side routing
+app.get('/*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+
+// Start the HTTP server
+const server = app.listen(process.env.PORT || 8080, () => {
+  console.log(`HTTP server running on port ${server.address().port}`);
+});
+
+// Set up WebSocket server
+const wss = new WebSocket.Server({ server });
 let users = [];
 
 wss.on('connection', (ws) => {
-  // Store username on the WebSocket instance for reference on close
   ws.on('message', (message) => {
     let data;
     try {
@@ -15,7 +31,7 @@ wss.on('connection', (ws) => {
     }
 
     if (data.type === 'join') {
-      ws.username = data.username; // Store username on the WebSocket instance
+      ws.username = data.username;
       if (!users.includes(data.username)) {
         users.push(data.username);
       }
@@ -51,10 +67,6 @@ wss.on('connection', (ws) => {
   ws.on('error', (error) => {
     console.error('WebSocket error:', error);
   });
-});
-
-wss.on('listening', () => {
-  console.log('WebSocket server running on ws://localhost:8080');
 });
 
 wss.on('error', (error) => {

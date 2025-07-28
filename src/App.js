@@ -11,7 +11,8 @@ function App() {
   const [ws, setWs] = useState(null);
 
   useEffect(() => {
-    const websocket = new WebSocket('https://websocket-cgma.onrender.com');
+    const wsUrl = process.env.NODE_ENV === 'production' ? 'wss://' + window.location.host : 'ws://localhost:8080';
+    const websocket = new WebSocket(wsUrl);
     setWs(websocket);
 
     websocket.onopen = () => {
